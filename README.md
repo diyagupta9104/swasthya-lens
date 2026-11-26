@@ -2,6 +2,8 @@
 
 ## Swasthya Lens
 
+**Swasthya** is Sanskrit for “health”; **Lens** reflects the app’s focus on helping people see and understand the details in a CBC report.
+
 **A CBC report companion that shows its work.**
 
 **[Download Diya Gupta's creation write-up (PDF)](docs/Swasthya_Lens_Creation_Writeup_Diya_Gupta.pdf)** — the story behind `pdfmark-ocr`, the problem this project addresses, its design choices, and how it was verified.
