@@ -23,7 +23,7 @@ Use the application's computed status and the interval printed on this report. D
 Call lookup_result before quoting a result or interval. For a summary, look up each flagged marker you mention.
 For one marker: say its value and report status, explain what the measure is using a supplied note, then give one concrete question to ask a clinician. Aim for 60-100 words.
 For a whole-report question: lead with the flagged markers, or say that the displayed markers are within their printed intervals. Group the other markers rather than listing every normal value. Explain one useful connection from the supplied notes and suggest one follow-up question. Aim for 90-140 words.
-If a note does not support a cause, symptom, disease, treatment or risk claim, do not introduce one. In particular, do not turn an out-of-range value into an inferred condition. Do not prescribe medicines, supplements, doses or tests.
+If a note does not support a cause, symptom, disease, treatment or risk claim, do not introduce one. In particular, do not turn an out-of-range value into an inferred condition. Do not prescribe medicines, supplements, doses or tests. If asked about possible causes, explain only possibilities supported by the supplied notes. If asked about further tests, say a clinician may choose other blood tests based on symptoms and history; do not name specific tests because the supplied notes do not establish which are appropriate.
 Avoid 'everything is normal', 'healthy', 'no infection', or guarantees of health when values are in range. A single result never identifies a cause or clinical urgency.
 Use short paragraphs, plain language and specific wording; avoid repetitive hedging. One useful next question is enough.
 Cite each result with its exact [Rnumber] and each medical explanation with the matching [CBC-number]. Do not cite an unrelated note. Never invent a citation or numeric value. Preserve displayed units.
@@ -54,7 +54,7 @@ def _context_notes(question: str, results: dict, chosen: list[str], ranked: list
         direction = _FLAG_NOTES.get(name, {}).get(results[name].status)
         if direction:
             ids.append(direction)
-        if re.search(r'\b(why|cause|causes|reason|reasons)\b|due to', question, re.I):
+        if re.search(r'\b(why|caus(?:e|es|ed|ing)|reasons?)\b|due to', question, re.I):
             cause = _CAUSE_NOTES.get((name, results[name].status))
             if cause:
                 ids.append(cause)
@@ -93,7 +93,21 @@ def _tools() -> list[dict]:
 
 
 def _explicit_markers(question: str) -> list[str]:
-    return [marker for marker, aliases in ALIASES.items() if any(re.search(rf'(?<!\w){re.escape(alias)}(?!\w)', question.lower()) for alias in aliases)]
+    aliases_by_marker = dict(ALIASES)
+    aliases_by_marker['MCV'] += ('small red blood cells', 'small red cells', 'small red blood cell size')
+    return [marker for marker, aliases in aliases_by_marker.items()
+            if any(re.search(rf'(?<!\w){re.escape(alias)}(?!\w)', question.lower()) for alias in aliases)]
+
+
+def _conversation_intent(question: str) -> str | None:
+    words = re.findall(r"[a-z]+", question.casefold())
+    if words and all(word in {'hi', 'hii', 'hiii', 'hey', 'hello', 'there', 'good', 'morning', 'afternoon', 'evening'} for word in words) and len(words) <= 4:
+        return 'greeting'
+    if words and all(word in {'hm', 'hmm', 'fine', 'ok', 'okay', 'alright', 'bye', 'goodbye', 'see', 'you', 'later', 'take', 'care'} for word in words) and any(word in {'bye', 'goodbye', 'later'} for word in words):
+        return 'farewell'
+    if words and all(word in {'thanks', 'thank', 'you', 'okay', 'ok'} for word in words) and any(word in {'thanks', 'thank'} for word in words):
+        return 'thanks'
+    return None
 
 
 def _booking_requested(question: str) -> bool:
@@ -128,7 +142,9 @@ def _offline_reply(report_items: list[dict], notes: list[dict]) -> str:
 def normalize_citations(content: str) -> str:
     # Models may group valid IDs as [CBC-11, CBC-12]; normalize before numeric validation.
     pattern = r'\[((?:R\d+|CBC-\d+)(?:\s*[,;]\s*(?:R\d+|CBC-\d+))+)\]'
-    return re.sub(pattern, lambda match: ' '.join('[' + value + ']' for value in re.findall(r'R\d+|CBC-\d+', match.group(1))), content)
+    content = re.sub(pattern, lambda match: ' '.join('[' + value + ']' for value in re.findall(r'R\d+|CBC-\d+', match.group(1))), content)
+    content = re.sub(r'(?<=\d)(?=(?:CBC-\d+|R\d+))', ' ', content)
+    return re.sub(r'(?<![\w\[])(R\d+|CBC-\d+)(?![\w\]])', r'[\1]', content)
 
 
 def _grounded_model_reply(content: str, report_items: list[dict], notes: list[dict], trace: list[dict] | None = None) -> bool:
@@ -152,6 +168,12 @@ def _grounded_model_reply(content: str, report_items: list[dict], notes: list[di
     for term in clinical_terms:
         if re.search(rf'\b{term}\w*\b', plain, re.I) and term not in evidence_text:
             return False
+    for test_name in ('ferritin', 'electrophoresis', 'iron studies', 'iron panel',
+                      'reticulocyte', 'blood smear', 'transferrin', 'tibc'):
+        if test_name in plain.lower() and test_name not in evidence_text:
+            return False
+    if re.search(r'\btests?\s+(?:such as|including|like)\b', plain, re.I):
+        return False
     # Possible causes in a note do not establish the cause for this patient.
     if re.search(r'\b(?:is|are|was|were)\s+(?:caused by|due to|because of|from)\b', plain, re.I):
         return False
@@ -167,6 +189,7 @@ def answer(question: str, report_text: str, history: list | None = None, focus: 
            language: str = 'English', booking_handler=None) -> dict[str, Any]:
     started = time.perf_counter()
     results = parse_report(report_text)
+    conversation = _conversation_intent(question)
     explicit = _explicit_markers(question)
     chosen = [marker for marker in explicit if marker in results]
     followup = not explicit and bool(focus) and not re.search(r'\b(summary|summarize|overall|all|outside|abnormal|stand out)\b', question, re.I)
@@ -181,7 +204,16 @@ def answer(question: str, report_text: str, history: list | None = None, focus: 
     irrelevant = re.search(r'\b(weather|bitcoin|stock price|write code|football|cricket|recipe)\b', question, re.I)
     unsupported = re.search(r'\b(crp|ferritin|glucose|creatinine|tsh|vitamin d)\b', question, re.I)
 
-    if urgent:
+    if conversation == 'greeting':
+        content, mode = ('Hi! What would you like to know about your report?' if language == 'English' else
+                         'नमस्ते! आप अपनी रिपोर्ट के बारे में क्या जानना चाहेंगे?'), 'Conversation'
+    elif conversation == 'farewell':
+        content, mode = ('Take care! You can ask me about your report whenever you need to.' if language == 'English' else
+                         'अपना ध्यान रखें! रिपोर्ट के बारे में कोई सवाल हो तो पूछ सकते हैं।'), 'Conversation'
+    elif conversation == 'thanks':
+        content, mode = ('You’re welcome. Is there anything else in the report you’d like to understand?' if language == 'English' else
+                         'आपका स्वागत है। क्या आप रिपोर्ट में कुछ और समझना चाहेंगे?'), 'Conversation'
+    elif urgent:
         content, mode = 'If you have these symptoms now, seek urgent medical care or call your local emergency number. This app cannot assess an emergency.', 'Safety route'
     elif not results:
         content, mode = 'No supported CBC values were read. Review the extracted text and correct a row, or upload a clearer report.', 'Input check'
@@ -262,8 +294,10 @@ def answer(question: str, report_text: str, history: list | None = None, focus: 
                 trace.append({'tool': 'model', 'output': {'status': 'unavailable'}})
             model_ms = round((time.perf_counter() - model_start) * 1000)
 
-    if mode in ('Safety route', 'Scope check', 'Missing result', 'Input check'):
+    if mode in ('Conversation', 'Safety route', 'Scope check', 'Missing result', 'Input check'):
         report_items, notes = [], []
+    if mode == 'Conversation':
+        chosen = []
     sources = [{'id': item['id'], 'title': f"{item['row']['marker']} · report line {item['row']['line_number']}",
                 'text': item['row']['raw_line'], 'url': None} for item in report_items]
     sources += [{'id': note['id'], 'title': note['title'], 'text': note['text'], 'url': note['url']} for note in notes]

@@ -119,7 +119,7 @@ Install `requirements-dev.txt` in the same virtual environment. On Windows:
 .\.venv\Scripts\python.exe scripts\browser_check.py
 ```
 
-The latest run passed **31 tests**. They cover the five sample choices, CBC parsing, local and hosted scanned-PDF OCR, review gating, citations, safety responses, brief generation and API behavior. The Chrome walkthrough checked report selection, citations, feedback, PDF download, a 390 px mobile viewport, the platelet case and the scanned-PDF review flow. [`docs/live-verification.json`](docs/live-verification.json) records a separate synthetic-data OpenAI walkthrough, including source IDs, tool calls and latency. These are software checks, not clinical validation or a measure of medical accuracy.
+The latest run passed **35 tests**. They cover the five sample choices, CBC parsing, local and hosted scanned-PDF OCR, review gating, citations, conversational greetings and farewells, follow-up questions, safety responses, brief generation and API behavior. The Chrome walkthrough checked report selection, citations, feedback, PDF download, a 390 px mobile viewport, the platelet case and the scanned-PDF review flow. [`docs/live-verification.json`](docs/live-verification.json) records a separate synthetic-data OpenAI walkthrough, including source IDs, tool calls and latency. These are software checks, not clinical validation or a measure of medical accuracy.
 
 ![Report values and evidence-linked conversation](docs/screenshot-workspace.png)
 

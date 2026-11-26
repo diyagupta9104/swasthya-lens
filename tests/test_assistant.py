@@ -66,6 +66,32 @@ def test_followup_keeps_marker_context(report):
     assert '78' in second['content'] and 'Hemoglobin:' not in second['content']
 
 
+def test_greeting_and_goodbye_do_not_read_out_results(report, monkeypatch):
+    monkeypatch.setattr(config, 'api_key', lambda: 'test-key')
+    monkeypatch.setattr(assistant, 'respond', lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError('Small talk should not call the model')))
+    for question in ('hii', 'hm fine fine.. bye'):
+        reply = assistant.answer(question, report, focus=['Hemoglobin', 'MCV'])
+        assert reply['mode'] == 'Conversation'
+        assert reply['topics'] == [] and reply['sources'] == []
+        assert '11.2' not in reply['content']
+
+
+def test_cause_question_uses_both_red_cell_markers_and_cause_notes(report):
+    question = 'What could be causing my low hemoglobin and small red blood cells, and what further tests might help clarify this?'
+    reply = assistant.answer(question, report, focus=['Hemoglobin', 'MCV'])
+    assert reply['topics'] == ['Hemoglobin', 'MCV']
+    assert {'CBC-19', 'CBC-20'} <= {source['id'] for source in reply['sources']}
+
+
+def test_bare_and_joined_citations_are_normalized(report, monkeypatch):
+    monkeypatch.setattr(config, 'api_key', lambda: 'test-key')
+    monkeypatch.setattr(assistant, 'respond', lambda *args, **kwargs: message('MCV is 78 fL R7. Small cells may need review CBC-11CBC-12.'))
+    reply = assistant.answer('What does my MCV mean?', report)
+    assert reply['mode'] == 'OpenAI + RAG'
+    assert '[R7]' in reply['content']
+    assert '[CBC-11] [CBC-12]' in reply['content']
+
+
 def test_local_booking_and_negation(report):
     assert assistant.answer('Please book a demo consultation', report)['booking']['id'].startswith('DEMO-')
     count = len(assistant.CONSULTATIONS)
@@ -106,6 +132,12 @@ def test_unsupported_cause_falls_back(report, monkeypatch):
     monkeypatch.setattr(config, 'api_key', lambda: 'test-key')
     monkeypatch.setattr(assistant, 'respond', lambda *args, **kwargs: message('Your low MCV is caused by iron deficiency [R7] [CBC-12].'))
     assert assistant.answer('Why is my MCV low?', report)['mode'] == 'Grounding fallback'
+
+
+def test_unsupported_specific_test_falls_back(report, monkeypatch):
+    monkeypatch.setattr(config, 'api_key', lambda: 'test-key')
+    monkeypatch.setattr(assistant, 'respond', lambda *args, **kwargs: message('Your MCV is 78 fL [R7]. Ask for ferritin or iron studies [CBC-12].'))
+    assert assistant.answer('What further tests?', report, focus=['MCV'])['mode'] == 'Grounding fallback'
 
 
 def test_grouped_citations_normalized_before_number_check(report, monkeypatch):

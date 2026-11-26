@@ -79,7 +79,7 @@ function renderAnswer(container, text, response) {
 }
 function showEvidence(data) {
   const list=$('evidence-list'); list.replaceChildren();
-  if(!data.sources.length)list.append(node('div','evidence-empty','This safety or scope response did not use report evidence.'));
+  if(!data.sources.length)list.append(node('div','evidence-empty','This reply did not need report evidence.'));
   for(const source of data.sources) {
     const card=node('div','source-card'); card.id=`source-${source.id}`;
     card.append(node('div','source-id',source.id),node('div','source-title',source.title),node('p','source-text',source.text));
@@ -94,7 +94,7 @@ function showEvidence(data) {
 }
 function addFeedback(body,data) {
   const row=node('div','response-actions');
-  const evidence=node('button','','View evidence'); evidence.onclick=()=>showEvidence(data); row.append(evidence);
+  if(data.sources.length){const evidence=node('button','','View evidence'); evidence.onclick=()=>showEvidence(data); row.append(evidence);}
   const copy=node('button','','Copy'); copy.onclick=async()=>{try{await navigator.clipboard.writeText(data.content);copy.textContent='Copied';}catch{copy.textContent='Copy unavailable';}};row.append(copy);
   for(const [rating,label] of [['helpful','Helpful'],['not_helpful','Needs improvement']]) {
     const button=node('button','feedback-button',label);
