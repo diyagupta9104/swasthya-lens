@@ -39,6 +39,25 @@ def test_scanned_sample_requires_value_review():
     assert any(row['marker'] == 'MCV' and row['value'] == 78 for row in data['results'])
 
 
+def test_hosted_pdf_ocr_uses_vision_and_requires_review(monkeypatch):
+    import server
+    monkeypatch.setattr(server.config, 'OCR_BACKEND', 'openai')
+    monkeypatch.setattr(server.config, 'api_key', lambda: 'test-key')
+
+    def fake_post(endpoint, payload):
+        assert endpoint == 'responses'
+        assert payload['input'][0]['content'][0]['type'] == 'input_file'
+        return {'output': [{'type': 'message', 'content': [{'type': 'output_text',
+            'text': 'Hemoglobin | 11.2 | g/dL | 12.0 - 15.5\nWBC | 7.6 | x10^3/uL | 4.0 - 11.0\nMCV | 78 | fL | 80 - 100'}]}]}
+
+    monkeypatch.setattr(server, 'post', fake_post)
+    response = client.post('/api/report/sample/scanned-pdf')
+    assert response.status_code == 200
+    data = response.json()
+    assert not data['reviewed'] and data['row_count'] == 3
+    assert data['extraction'].startswith('OpenAI vision')
+
+
 def test_unreviewed_report_cannot_chat(report):
     token = client.post('/api/report/text', json={'text': report}).json()['session_id']
     assert client.post('/api/chat', json={'session_id': token, 'question': 'Explain MCV'}).status_code == 409

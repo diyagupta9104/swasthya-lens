@@ -8,6 +8,7 @@ import uuid
 import os
 import subprocess
 import sys
+import base64
 from pathlib import Path
 from typing import Literal
 
@@ -21,6 +22,7 @@ import config
 from assistant import METRICS, answer, _demo_consultation
 from engine import ROOT, parse_report
 from retrieval import DOCUMENTS
+from provider import ProviderError, output_text, post
 
 app = FastAPI(title='Swasthya Lens', version='2.0.0', description='Evidence-grounded CBC report companion')
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
@@ -33,7 +35,7 @@ SAMPLE_REPORTS = [
     {'id': 'raised-wbc', 'name': 'Kabir', 'title': 'Raised white cell count', 'description': 'Explore one WBC flag while the other supported CBC markers remain in range.', 'kind': 'Text report', 'accent': 'sky', 'file': 'sample_reports/neutrophil_pattern.txt', 'question': 'What can a high WBC result mean?'},
     {'id': 'low-platelets', 'name': 'Meera', 'title': 'Low platelet count', 'description': 'See how the assistant handles a platelet result below the report interval.', 'kind': 'Text report', 'accent': 'rose', 'file': 'sample_reports/low_platelets.txt', 'question': 'What should I ask my clinician about low platelets?'},
     {'id': 'within-range', 'name': 'Aarav', 'title': 'Within printed ranges', 'description': 'A full synthetic CBC without an out-of-range flag. Practice asking follow-up questions.', 'kind': 'Text report', 'accent': 'mint', 'file': 'sample_reports/within_range.txt', 'question': 'Does this report show any results outside its printed ranges?'},
-    {'id': 'scanned-pdf', 'name': 'OCR practice', 'title': 'Scanned PDF', 'description': 'Run the included image-based PDF through your pdfmark-ocr package, then review the extracted rows.', 'kind': 'Scanned PDF · OCR', 'accent': 'violet', 'file': 'sample_scanned.pdf', 'question': 'Which values were extracted from this scan?'},
+    {'id': 'scanned-pdf', 'name': 'OCR practice', 'title': 'Scanned PDF', 'description': 'Extract the included image-based PDF, then review the extracted rows.', 'kind': 'Scanned PDF · OCR', 'accent': 'violet', 'file': 'sample_scanned.pdf', 'question': 'Which values were extracted from this scan?'},
 ]
 
 
@@ -121,6 +123,44 @@ def _extract(data: bytes, extension: str) -> str:
     return _ocr_pdf(data)
 
 
+def _ocr_ai(data: bytes, extension: str) -> str:
+    if not config.api_key():
+        raise ValueError('Hosted OCR needs the OpenAI API key.')
+    if extension == '.pdf':
+        import pymupdf
+        try:
+            with pymupdf.open(stream=data, filetype='pdf') as document:
+                if document.is_encrypted:
+                    raise ValueError('Password-protected PDFs are not supported.')
+                if len(document) > 10:
+                    raise ValueError('Please upload at most 10 report pages.')
+        except pymupdf.FileDataError as exc:
+            raise ValueError('This file is not a valid PDF.') from exc
+        media = {'type': 'input_file', 'filename': 'report.pdf',
+                 'file_data': 'data:application/pdf;base64,' + base64.b64encode(data).decode('ascii')}
+    else:
+        from PIL import Image
+        from io import BytesIO
+        with Image.open(BytesIO(data)) as image:
+            if image.width * image.height > 20_000_000:
+                raise ValueError('Use a report image smaller than 20 megapixels.')
+            image.verify()
+        mime = 'image/png' if extension == '.png' else 'image/jpeg'
+        media = {'type': 'input_image', 'image_url': f'data:{mime};base64,' + base64.b64encode(data).decode('ascii'),
+                 'detail': 'high'}
+    response = post('responses', {'model': config.MODEL, 'store': False, 'max_output_tokens': 1200,
+        'input': [{'role': 'user', 'content': [media, {'type': 'input_text',
+            'text': 'Transcribe only visible CBC test rows from this report. Output each as: Marker | Value | Unit | Low - High. Preserve visible digits, decimal points and units exactly. Do not infer missing values or explain the results.'}]}]})
+    text = output_text(response).strip()
+    if not parse_report(text):
+        raise ValueError('No supported CBC values were read. Try a clearer image or paste the report text.')
+    return text
+
+
+def _ocr_method() -> str:
+    return 'OpenAI vision · confirm every value' if config.OCR_BACKEND == 'openai' else 'pdfmark-ocr · local RapidOCR'
+
+
 @app.get('/')
 def index():
     return FileResponse(ROOT / 'static' / 'index.html')
@@ -129,7 +169,7 @@ def index():
 @app.get('/api/health')
 def health():
     return {'ok': True, 'model_enabled': bool(config.api_key()), 'model': config.MODEL,
-            'ocr': 'pdfmark-ocr / RapidOCR', 'semantic_enabled': config.SEMANTIC and bool(config.api_key()),
+            'ocr': _ocr_method(), 'semantic_enabled': config.SEMANTIC and bool(config.api_key()),
             'knowledge_chunks': len(DOCUMENTS), 'session_ttl_minutes': 60}
 
 
@@ -152,10 +192,18 @@ async def load_sample_report(sample_id: str):
     if sample_id == 'scanned-pdf':
         started = time.perf_counter()
         try:
-            text = await run_in_threadpool(_ocr_pdf, source.read_bytes())
+            data = source.read_bytes()
+            if config.OCR_BACKEND == 'openai':
+                text = await run_in_threadpool(_ocr_ai, data, '.pdf')
+            else:
+                text = await run_in_threadpool(_ocr_pdf, data)
+        except ProviderError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
         except Exception as exc:
             raise HTTPException(422, 'The sample scan could not be read. Check the OCR installation.') from exc
-        return _store(text, 'pdfmark-ocr · local RapidOCR', elapsed=round((time.perf_counter() - started) * 1000), sample=sample)
+        return _store(text, _ocr_method(), elapsed=round((time.perf_counter() - started) * 1000), sample=sample)
     return _store(source.read_text(encoding='utf-8'), 'Synthetic demonstration report', reviewed=True, sample=sample)
 
 
@@ -180,8 +228,11 @@ async def upload_report(file: UploadFile = File(...)):
         else:
             if extension == '.pdf' and not data.startswith(b'%PDF-'):
                 raise ValueError('This file is not a valid PDF.')
-            text = await run_in_threadpool(_extract, data, extension)
-            method = 'pdfmark-ocr · local RapidOCR'
+            extractor = _ocr_ai if config.OCR_BACKEND == 'openai' else _extract
+            text = await run_in_threadpool(extractor, data, extension)
+            method = _ocr_method()
+    except ProviderError as exc:
+        raise HTTPException(503, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     except Exception as exc:

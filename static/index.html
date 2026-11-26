@@ -19,7 +19,7 @@
       <div class="flow-step"><span>02</span><div><strong>Check your numbers</strong><small>Review the extracted values</small></div></div>
       <div class="flow-step"><span>03</span><div><strong>Make sense of it</strong><small>Ask, explore, prepare for care</small></div></div>
     </div>
-    <div class="sidebar-bottom"><div class="privacy-card"><div class="privacy-icon">✧</div><strong>You stay in control.</strong><p>OCR runs on this computer. Questions, selected report values and reference notes are sent to OpenAI when you chat. Clear your report when you're done.</p></div><div class="sidebar-foot">EDUCATIONAL COMPANION <span>•</span> CBC</div></div>
+    <div class="sidebar-bottom"><div class="privacy-card"><div class="privacy-icon">✧</div><strong>You stay in control.</strong><p id="privacy-copy">Local OCR runs on this computer. Questions, selected report values and reference notes are sent to OpenAI when you chat. Clear your report when you're done.</p></div><div class="sidebar-foot">EDUCATIONAL COMPANION <span>•</span> CBC</div></div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="breadcrumb">Your workspace <span>/</span> Report explorer</div><div class="top-actions"><span class="status-dot"></span><span id="model-status">Connecting…</span><div class="avatar">SL</div></div></header>
@@ -32,7 +32,7 @@
       <section id="upload-section">
         <div class="section-heading"><div><div class="eyebrow dark">THE REPORT LIBRARY</div><h2>Choose a patient story</h2><p>All five reports are synthetic. Select one to explore a different CBC pattern.</p></div><div class="section-count">01 <span>/ 03</span></div></div>
         <div id="sample-grid" class="sample-grid" aria-label="Synthetic patient reports"><div class="sample-loading">Loading the demo report library…</div></div>
-        <div class="own-report-head"><div><div class="eyebrow dark">YOUR OWN FILE</div><h3>Have a report in hand?</h3><p>Upload a PDF, image or text file. Check the extracted values before you chat.</p></div><span class="own-report-chip">LOCAL OCR · PDFMARK-OCR</span></div>
+        <div class="own-report-head"><div><div class="eyebrow dark">YOUR OWN FILE</div><h3>Have a report in hand?</h3><p>Upload a PDF, image or text file. Check the extracted values before you chat.</p></div><span class="own-report-chip" id="ocr-chip">LOCAL OCR · PDFMARK-OCR</span></div>
         <div class="upload-grid">
           <div class="upload-card" id="dropzone" tabindex="0" role="button" aria-label="Upload a report">
             <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" hidden>

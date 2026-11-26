@@ -151,7 +151,7 @@ function sampleCard(sample,index) {
 async function loadSample(sample) {
   if(busy)return;
   setBusy(true);
-  notice(sample.id==='scanned-pdf'?'Reading the scanned PDF with pdfmark-ocr. This may take a moment…':`Opening ${sample.name}'s synthetic CBC…`);
+  notice(sample.id==='scanned-pdf'?'Reading the scanned PDF. This may take a moment…':`Opening ${sample.name}'s synthetic CBC…`);
   try { showReport(await api(`/api/report/sample/${encodeURIComponent(sample.id)}`,{method:'POST'})); }
   catch(error){ notice(error.message,true); }
   finally { setBusy(false); }
@@ -183,6 +183,6 @@ $('suggestions').onclick=event=>{if(event.target.dataset.question)sendQuestion(e
 $('nav-new').onclick=resetReport;
 $('nav-workspace').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
 const replace=node('button','button button-outline','New report');replace.onclick=resetReport;document.querySelector('.report-toolbar>div').prepend(replace);
-api('/api/health').then(data=>{$('model-status').textContent=data.model_enabled?'OpenAI connected · ready':'Local evidence mode';}).catch(()=>{$('model-status').textContent='Server unavailable';notice('The server is unavailable. Start the app and reload.',true);});
+api('/api/health').then(data=>{ $('model-status').textContent=data.model_enabled?'OpenAI connected · ready':'Local evidence mode'; if(data.ocr.startsWith('OpenAI')) { $('ocr-chip').textContent='AI OCR · OPENAI VISION'; $('privacy-copy').textContent='On this hosted version, PDF and image uploads are sent to OpenAI for text extraction. Questions, selected report values and reference notes are sent to OpenAI when you chat. Check every extracted value against your original.'; } }).catch(()=>{$('model-status').textContent='Server unavailable';notice('The server is unavailable. Start the app and reload.',true);});
 loadSampleLibrary();
 refreshMetrics();

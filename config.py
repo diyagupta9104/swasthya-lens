@@ -15,3 +15,4 @@ def api_key() -> str:
 MODEL = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')
 EMBEDDING_MODEL = os.getenv('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small')
 SEMANTIC = os.getenv('SEMANTIC_RETRIEVAL', 'true').lower() == 'true'
+OCR_BACKEND = os.getenv('OCR_BACKEND', 'local').lower()

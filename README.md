@@ -22,7 +22,7 @@
 | Kabir · Raised white cell count | WBC above the printed interval | Yes |
 | Meera · Low platelet count | Platelets below the printed interval | Yes |
 | Aarav · Within printed ranges | A CBC with no displayed flags | Yes |
-| OCR practice · Scanned PDF | `pdfmark-ocr` reads an image-based PDF | Review values first |
+| OCR practice · Scanned PDF | Local `pdfmark-ocr` or hosted AI vision reads an image-based PDF | Review values first |
 
 Every name and result in the library is synthetic. The same interface also accepts PDF, PNG, JPG, TXT, and pasted report text. User-supplied and OCR-extracted values require confirmation before chat.
 
@@ -50,7 +50,7 @@ Visit **http://127.0.0.1:8510**. The five sample reports, local OCR, exact range
 
 ### Deploy on Render
 
-The app is hosted at **[ch23b012-edgechat-project.onrender.com](https://ch23b012-edgechat-project.onrender.com)** on a free Render web service in Singapore. [`render.yaml`](render.yaml) records the same configuration, and [`.python-version`](.python-version) pins Python 3.12 because the OCR dependency does not support Python 3.13 or newer. Add `OPENAI_API_KEY` as a Render secret to enable AI chat and semantic retrieval; the app also runs in local-evidence mode without it. Render uses `/api/health` to check the service.
+The app is hosted at **[ch23b012-edgechat-project.onrender.com](https://ch23b012-edgechat-project.onrender.com)** on a free Render web service in Singapore. [`render.yaml`](render.yaml) records the same configuration, and [`.python-version`](.python-version) pins Python 3.12 for the local OCR dependency. The Render service has `OPENAI_API_KEY` configured as a secret and `OCR_BACKEND=openai`: PDF and image uploads use OpenAI vision because the free instance's 512 MiB memory limit cannot reliably run RapidOCR. AI chat and semantic retrieval use the same key. Render checks `/api/health`.
 
 ### OpenAI configuration
 
@@ -61,13 +61,13 @@ Copy-Item .env.example .env
 # Edit .env and set OPENAI_API_KEY to your key, then start the server.
 ```
 
-The default chat model is `gpt-4.1-mini`; semantic retrieval uses `text-embedding-3-small`. `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL`, and `SEMANTIC_RETRIEVAL` can be changed in `.env`. With no key or an unavailable AI service, chat falls back to a local, evidence-linked explanation. OCR, exact range checks, and lexical retrieval work without an API key. There is no OCR, booking, or database API key.
+The default chat and hosted OCR model is `gpt-4.1-mini`; semantic retrieval uses `text-embedding-3-small`. `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL`, `SEMANTIC_RETRIEVAL`, and `OCR_BACKEND` can be changed in `.env`. With no key or an unavailable AI service, chat falls back to a local, evidence-linked explanation. Local `pdfmark-ocr`, exact range checks, and lexical retrieval work without an API key. Hosted AI OCR requires the OpenAI key.
 
 ## What happens to a report
 
 ```mermaid
 flowchart LR
-    A[PDF or image] --> B[pdfmark-ocr + local RapidOCR]
+    A[PDF or image] --> B[Local pdfmark-ocr or hosted OpenAI vision]
     C[TXT or pasted text] --> D[CBC parser]
     B --> D
     D --> E[Exact values + printed intervals]
@@ -82,9 +82,9 @@ flowchart LR
     K --> I
 ```
 
-### Local OCR for scanned PDFs
+### OCR for scanned PDFs
 
-Scanned reports are the awkward part of a report assistant: text extraction alone may return little or nothing. This project uses **`pdfmark-ocr`**, a package published under **Diya Gupta CH23B012**, with local **RapidOCR** and `page_ocr="auto"`. That produces Markdown text for the CBC parser, including for the included image-based `sample_scanned.pdf`. Images are converted to a PDF first, then follow the same route. OCR is local and needs no cloud OCR key. The interface asks users to verify extracted values because OCR can still misread digits.
+Scanned reports are the awkward part of a report assistant: text extraction alone may return little or nothing. Locally, this project uses **`pdfmark-ocr`**, a package published under **Diya Gupta CH23B012**, with **RapidOCR** and `page_ocr="auto"`. Images are converted to a PDF first. On Render, the 512 MiB instance uses **OpenAI vision** for PDF and image extraction; the original PDF or image is sent to OpenAI for transcription. Both routes feed the CBC parser and require the user to check every extracted value against the original before chat. The included `sample_scanned.pdf` exercises both paths.
 
 ### Grounded answers, not guessed values
 
@@ -105,7 +105,7 @@ The downloaded Visit brief repeats confirmed report values and suggests question
 | Function calling | Exact result lookup and guarded mock consultation request |
 | API integration | OpenAI Responses and embeddings APIs |
 | Hallucination control | Deterministic values, printed intervals, citation and numeric checks, evidence fallback |
-| Local processing | `pdfmark-ocr` + RapidOCR and a local retrieval fallback |
+| Local processing | `pdfmark-ocr` + RapidOCR on capable hosts, plus a local retrieval fallback |
 | Evaluation | Automated app checks, browser walkthrough, feedback and latency metrics |
 
 ## Verification
@@ -119,13 +119,13 @@ Install `requirements-dev.txt` in the same virtual environment. On Windows:
 .\.venv\Scripts\python.exe scripts\browser_check.py
 ```
 
-The latest run passed **30 tests**. They cover the five sample choices, CBC parsing, scanned-PDF OCR, review gating, citations, safety responses, brief generation and API behavior. The Chrome walkthrough checked report selection, citations, feedback, PDF download, a 390 px mobile viewport, the platelet case and the scanned-PDF review flow. [`docs/live-verification.json`](docs/live-verification.json) records a separate synthetic-data OpenAI walkthrough, including source IDs, tool calls and latency. These are software checks, not clinical validation or a measure of medical accuracy.
+The latest run passed **31 tests**. They cover the five sample choices, CBC parsing, local and hosted scanned-PDF OCR, review gating, citations, safety responses, brief generation and API behavior. The Chrome walkthrough checked report selection, citations, feedback, PDF download, a 390 px mobile viewport, the platelet case and the scanned-PDF review flow. [`docs/live-verification.json`](docs/live-verification.json) records a separate synthetic-data OpenAI walkthrough, including source IDs, tool calls and latency. These are software checks, not clinical validation or a measure of medical accuracy.
 
 ![Report values and evidence-linked conversation](docs/screenshot-workspace.png)
 
 ## Data handling and scope
 
-Use the synthetic reports for a demo. If you try a personal report, remove identifying details first. OCR runs locally, but when AI chat or semantic retrieval is enabled, the question, selected report rows and reference notes are sent to OpenAI. Report sessions, mock consultation requests and recent metrics live in server memory and disappear on restart. No report text or chat content is written into the metrics log.
+Use the synthetic reports for a demo. If you try a personal report, remove identifying details first. On Render, PDF and image uploads are sent to OpenAI for transcription. Local runs use `pdfmark-ocr` unless `OCR_BACKEND=openai` is set. When AI chat or semantic retrieval is enabled, the question, selected report rows and reference notes are sent to OpenAI. Report sessions, mock consultation requests and recent metrics live in server memory and disappear on restart. No report text or chat content is written into the metrics log.
 
 The app supports six CBC markers only. It does not diagnose, prescribe, authenticate users, keep longitudinal records, or schedule real care. The emergency route directs users with urgent symptoms to immediate medical help. A production healthcare product would need clinical review, secure storage, identity controls and a validated workflow.
 
@@ -134,7 +134,7 @@ The app supports six CBC markers only. It does not diagnose, prescribe, authenti
 | File | Role |
 | --- | --- |
 | `static/` | Responsive report library, results view, chat and evidence panel |
-| `server.py` | FastAPI routes, upload/OCR handling and short-lived sessions |
+| `server.py`, `ocr_worker.py` | FastAPI routes, hosted AI OCR, local OCR worker and short-lived sessions |
 | `engine.py` | CBC row parsing and exact range checks |
 | `retrieval.py`, `knowledge_base.json` | Hybrid RAG over cited CBC notes |
 | `assistant.py`, `provider.py` | Chat safety, tool calls and OpenAI adapter |
