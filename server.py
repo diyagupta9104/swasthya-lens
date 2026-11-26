@@ -5,6 +5,7 @@ import tempfile
 import threading
 import time
 import uuid
+from unittest.mock import patch
 from pathlib import Path
 from typing import Literal
 
@@ -24,6 +25,7 @@ app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
 SESSIONS: dict[str, dict] = {}
 SESSION_TTL = 3600
 MAX_UPLOAD = 8 * 1024 * 1024
+OCR_LOCK = threading.Lock()
 SAMPLE_REPORTS = [
     {'id': 'low-red-cell', 'name': 'Aarohi', 'title': 'Low red cell indices', 'description': 'Hemoglobin, hematocrit and MCV sit below the intervals printed on this synthetic CBC.', 'kind': 'Text report', 'accent': 'amber', 'file': 'sample_report.txt', 'question': 'What do my low hemoglobin and MCV mean?'},
     {'id': 'raised-wbc', 'name': 'Kabir', 'title': 'Raised white cell count', 'description': 'Explore one WBC flag while the other supported CBC markers remain in range.', 'kind': 'Text report', 'accent': 'sky', 'file': 'sample_reports/neutrophil_pattern.txt', 'question': 'What can a high WBC result mean?'},
@@ -84,6 +86,7 @@ def _store(text: str, extraction: str, reviewed: bool = False, elapsed: int = 0,
 
 
 def _ocr_pdf(data: bytes) -> str:
+    import os
     import pymupdf
     from pdf2md_ocr import stitch_full_pdf
     with pymupdf.open(stream=data, filetype='pdf') as document:
@@ -94,7 +97,13 @@ def _ocr_pdf(data: bytes) -> str:
     with tempfile.TemporaryDirectory(prefix='swasthya-') as folder:
         pdf, output = Path(folder) / 'report.pdf', Path(folder) / 'report.md'
         pdf.write_bytes(data)
-        markdown, _ = stitch_full_pdf(str(pdf), str(output), engine='rapidocr', workers=1, page_ocr='auto')
+        # pdfmark-ocr sizes its ONNX thread pool from the host's CPU count.
+        # Render's free instance sees 8 host CPUs but has only a small CPU share.
+        # Serialize OCR and cap its thread pool to one while the package runs.
+        with OCR_LOCK, patch.object(os, 'cpu_count', return_value=1):
+            markdown, _ = stitch_full_pdf(str(pdf), str(output), engine='rapidocr',
+                                          workers=1, max_dim=1100, render_dpi=130,
+                                          page_ocr='auto')
         return markdown or output.read_text(encoding='utf-8')
 
 
