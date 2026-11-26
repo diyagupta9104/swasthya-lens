@@ -1,6 +1,6 @@
-[Deployment](https://ch23b012-edgechat-project.onrender.com)
+# [🚀 Open the live app](https://ch23b012-edgechat-project.onrender.com)
 
-# Swasthya Lens
+## Swasthya Lens
 
 **A CBC report companion that shows its work.**
 
