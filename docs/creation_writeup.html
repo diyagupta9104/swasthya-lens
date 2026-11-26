@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Swasthya Lens — Creation Write-up by Diya Gupta</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: "Segoe UI", Arial, sans-serif; color: #173b35; }
+  body { background: #e9efe9; }
+  .page { width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; position: relative; background: #f9faf6; padding: 20mm 19mm 16mm; }
+  .page:last-child { page-break-after: auto; }
+  .dark { background: #0d3934; color: #f4fbf5; }
+  .kicker { text-transform: uppercase; letter-spacing: .17em; font-size: 8.5pt; font-weight: 800; color: #35876d; }
+  .dark .kicker { color: #a4e2c6; }
+  h1 { margin: 9mm 0 0; font-size: 37pt; letter-spacing: -.055em; line-height: 1.02; color: #f7fff9; }
+  h2 { margin: 4mm 0 5mm; font-size: 25pt; letter-spacing: -.045em; line-height: 1.13; color: #123a33; }
+  h3 { margin: 0 0 2mm; font-size: 13pt; letter-spacing: -.025em; color: #123a33; }
+  p { margin: 0 0 3mm; font-size: 10pt; line-height: 1.52; color: #426059; }
+  strong { color: #173b35; }
+  .dark strong { color: #f4fbf5; }
+  .lead { font-size: 12.1pt; line-height: 1.52; color: #31584d; }
+  .dark .lead { color: #d5eee1; }
+  .rule { height: 1px; background: #d6e2d8; margin: 7mm 0; }
+  .eyebrow-row { display: flex; justify-content: space-between; align-items: center; }
+  .page-tag { color: #8aa99a; font-size: 8.5pt; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .num { font-size: 10pt; font-weight: 800; color: #2c8468; }
+  .footer { position: absolute; bottom: 11mm; left: 19mm; right: 19mm; display: flex; justify-content: space-between; border-top: 1px solid #d4e2d9; padding-top: 3mm; color: #78938a; font-size: 8pt; }
+  .dark .footer { border-color: rgba(255,255,255,.23); color: #9bcab7; }
+  .chip-row { display: flex; gap: 2mm; flex-wrap: wrap; margin: 5mm 0 0; }
+  .chip { border-radius: 30px; border: 1px solid #d7e5db; padding: 1.8mm 3mm; color: #2b6b56; background: #ecf6ee; font-size: 8pt; font-weight: 750; }
+  .dark .chip { color: #ddf9e7; border-color: #478477; background: rgba(255,255,255,.08); }
+  .box { border: 1px solid #dae7dc; background: #fff; border-radius: 5mm; padding: 5mm; }
+  .soft { background: #e9f3ec; border-color: #d8e9db; }
+  .amber { background: #faf0df; border-color: #ecd8b3; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+  .step-num { font-size: 9pt; font-weight: 900; color: #2c8a69; letter-spacing: .08em; margin-bottom: 2mm; }
+  .mini { font-size: 8.6pt; line-height: 1.43; }
+  .quote { border-left: 3px solid #48ad7e; padding-left: 5mm; font-size: 12.3pt; line-height: 1.48; color: #244e40; font-weight: 600; }
+  .source { color: #638278; font-size: 8pt; line-height: 1.4; }
+  a { color: #1e7759; text-decoration: none; }
+  .dark a { color: #b3eed0; }
+  .cover-orbit { position: absolute; width: 135mm; height: 135mm; border: 1px solid rgba(147,233,189,.22); border-radius: 50%; right: -50mm; top: -39mm; }
+  .cover-orbit:before { content: ""; position: absolute; inset: 16mm; border: 1px solid rgba(147,233,189,.16); border-radius: 50%; }
+  .cover-orbit:after { content: ""; position: absolute; inset: 34mm; border: 1px solid rgba(147,233,189,.13); border-radius: 50%; }
+  .cover-intro { max-width: 143mm; position: relative; z-index: 2; }
+  .cover-sub { font-size: 18pt; font-weight: 500; line-height: 1.25; color: #c0e8d1; letter-spacing: -.025em; margin-top: 4mm; }
+  .byline { display: flex; align-items: center; gap: 3mm; margin: 8mm 0 0; font-size: 10pt; color: #d3ecdd; }
+  .byline-mark { width: 8mm; height: 8mm; display: inline-grid; place-items: center; background: #a8e3bf; color: #0d3934; border-radius: 2mm; font-weight: 900; }
+  .cover-statement { margin: 12mm 0 0; padding: 5mm 6mm; border-left: 3px solid #9de2bd; background: rgba(255,255,255,.065); color: #e1f6e8; font-size: 11.5pt; line-height: 1.55; }
+  .cover-shot { margin-top: 9mm; height: 89mm; overflow: hidden; border: 1px solid rgba(255,255,255,.2); border-radius: 4mm; box-shadow: 0 6mm 17mm rgba(0,0,0,.17); }
+  .cover-shot img { width: 100%; height: 100%; object-fit: cover; object-position: center 14%; display: block; }
+  .cover-caption { color: #a9d2c0; margin-top: 2mm; font-size: 8pt; }
+  .flow { display: grid; grid-template-columns: 1fr 8mm 1fr 8mm 1fr 8mm 1fr; align-items: center; margin: 6mm 0; }
+  .flow-node { min-height: 24mm; border-radius: 3mm; background: #eaf4ed; padding: 4mm 2mm; text-align: center; color: #1b5b48; font-size: 9pt; font-weight: 750; display: grid; place-items: center; border: 1px solid #d5e7da; }
+  .flow-arrow { text-align: center; font-size: 18pt; color: #54a27a; }
+  .code { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; white-space: pre-wrap; line-height: 1.5; color: #d4f0de; background: #103b34; border-radius: 3mm; padding: 4mm; margin: 4mm 0; }
+  .label { color: #39765d; font-size: 8pt; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 2mm; }
+  .journey { margin: 5mm 0; display: grid; grid-template-columns: repeat(4,1fr); gap: 2.4mm; }
+  .journey .box { min-height: 40mm; padding: 4mm; }
+  .screenshot { width: 100%; display: block; border: 1px solid #d8e3d9; border-radius: 3mm; }
+  .screenshot-frame { height: 91mm; overflow: hidden; border-radius: 4mm; background: #e5ede6; border: 1px solid #d8e3d9; margin-top: 4mm; }
+  .screenshot-frame img { width: 100%; display: block; margin-top: -13mm; }
+  .tech-line { display: grid; grid-template-columns: 15mm 1fr; gap: 3mm; padding: 4mm 0; border-bottom: 1px solid #dce8de; }
+  .tech-line:last-child { border-bottom: 0; }
+  .tech-index { width: 11mm; height: 11mm; display: grid; place-items: center; background: #d9eee0; border-radius: 50%; color: #13765a; font-weight: 900; font-size: 9pt; }
+  .evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 6mm 0; }
+  .evidence .box { min-height: 35mm; }
+  .metric { text-align: center; padding: 5mm 2mm; }
+  .metric b { display: block; font-size: 25pt; color: #17684f; letter-spacing: -.05em; }
+  .metric span { font-size: 8pt; color: #54776b; font-weight: 700; }
+  .two-col-text { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .closing { margin-top: 6mm; background: #123b34; padding: 6mm; border-radius: 4mm; color: #e9f8ee; }
+  .closing p { color: #e9f8ee; font-size: 10.6pt; line-height: 1.55; margin: 0; }
+  .package .box { padding: 4mm; }
+  .package .flow { margin: 4mm 0; }
+  .package .rule { margin: 5mm 0; }
+  .package .code { margin: 3mm 0; padding: 3mm; }
+  .experience .journey .box { min-height: 34mm; }
+  .experience .screenshot-frame { height: 78mm; }
+</style>
+</head>
+<body>
+
+<section class="page dark">
+  <div class="cover-orbit"></div>
+  <div class="cover-intro">
+    <div class="kicker">Creation write-up · Edgechat Wizard work sample</div>
+    <h1>Swasthya<br>Lens<span style="color:#a8e4c1">.</span></h1>
+    <div class="cover-sub">From lab numbers to questions grounded in evidence.</div>
+    <div class="byline"><span class="byline-mark">DG</span> Diya Gupta · CH23B012</div>
+    <div class="cover-statement">What makes this creation special to me is the path from a Python package I published to a complete, careful experience for someone reading a difficult report. The assistant shows the result and source behind an answer, and it gives the user a chance to correct OCR before asking anything.</div>
+    <div class="chip-row">
+      <span class="chip">My PyPI release: pdfmark-ocr 0.3.1</span>
+      <span class="chip">6 CBC markers</span>
+      <span class="chip">22 cited notes</span>
+      <span class="chip">30 tests</span>
+    </div>
+  </div>
+  <div class="cover-shot"><img src="screenshot-home.png" alt="Swasthya Lens report explorer"></div>
+  <div class="cover-caption">The report explorer: fictional cases make the full experience easy to try.</div>
+  <div class="footer"><span>Independent prototype · not a diagnostic service</span><span>01 / 05</span></div>
+</section>
+
+<section class="page package">
+  <div class="eyebrow-row"><span class="kicker">01 · The foundation I brought</span><span class="page-tag">Package first</span></div>
+  <h2>My OCR package makes the report usable.</h2>
+  <p class="lead">The first problem is often practical: a lab report may be a scan, so ordinary PDF text extraction returns little or nothing. Before an assistant can explain a value, it must be able to read the value.</p>
+  <div class="box soft" style="margin:6mm 0 5mm">
+    <div class="label">Published package</div>
+    <h3>pdfmark-ocr · release 0.3.1</h3>
+    <p>The current release's PyPI metadata credits <strong>Diya Gupta CH23B012</strong>. It converts PDFs to Markdown using local text extraction and OCR. In Swasthya Lens, I use it as the entry point for scanned reports, with RapidOCR and automatic full-page OCR for text-poor pages.</p>
+    <p class="source"><a href="https://pypi.org/project/pdfmark-ocr/">pypi.org/project/pdfmark-ocr/</a> · Version 0.3.1 verified on 26 November 2026</p>
+  </div>
+  <div class="flow">
+    <div class="flow-node">Scanned<br>PDF</div><div class="flow-arrow">→</div>
+    <div class="flow-node">pdfmark-ocr<br>+ RapidOCR</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Extracted<br>report rows</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Human<br>review</div>
+  </div>
+  <div class="grid-3">
+    <div class="box"><div class="step-num">01 / TEXT</div><h3>Use what is already there</h3><p class="mini">Native PDF text can be extracted directly, without OCR work on every page.</p></div>
+    <div class="box"><div class="step-num">02 / OCR</div><h3>Read the scan locally</h3><p class="mini">Images and text-poor pages go through local OCR; no cloud OCR key is needed.</p></div>
+    <div class="box"><div class="step-num">03 / REVIEW</div><h3>Make uncertainty visible</h3><p class="mini">The app asks the user to confirm extracted numbers before chat, because OCR can misread a digit.</p></div>
+  </div>
+  <div class="rule"></div>
+  <div class="label">How the app calls it</div>
+  <div class="code">stitch_full_pdf(report_pdf, output_md,
+                engine="rapidocr", workers=1, page_ocr="auto")</div>
+  <p>The package returns Markdown that my CBC parser can read. A PNG or JPG is converted to a PDF first and follows the same path. I included an image-based sample PDF so the OCR route is demonstrable, not just described.</p>
+  <div class="box amber" style="margin-top:3mm">
+    <p style="margin:0"><strong>The design decision:</strong> OCR is part of a trust workflow. Extracting text is useful; letting someone inspect and correct the extracted values is what makes that text safe enough to use as report evidence.</p>
+  </div>
+  <div class="footer"><span>Swasthya Lens · Diya Gupta</span><span>02 / 05</span></div>
+</section>
+
+<section class="page experience">
+  <div class="eyebrow-row"><span class="kicker">02 · The problem and the experience</span><span class="page-tag">For the person reading the report</span></div>
+  <h2>A CBC is easy to receive and hard to interpret.</h2>
+  <p class="lead">A complete blood count mixes unfamiliar labels, units, and reference intervals. A generic chatbot can make this worse if it invents a range, overlooks the actual report row, or turns one low value into a diagnosis.</p>
+  <p>I designed Swasthya Lens to answer a narrower, more useful question: <strong>“What does my report actually show, and what can I ask my clinician next?”</strong> It keeps the original number and its printed interval in view while the user explores the meaning of a marker.</p>
+  <div class="journey">
+    <div class="box"><div class="step-num">01</div><h3>Choose or upload</h3><p class="mini">Five fictional cases, or a PDF, image, TXT file, or pasted text.</p></div>
+    <div class="box"><div class="step-num">02</div><h3>Check the values</h3><p class="mini">Review extracted rows and printed intervals before a user-supplied report enters chat.</p></div>
+    <div class="box"><div class="step-num">03</div><h3>Ask with evidence</h3><p class="mini">Open report-row and medical-note citations beside the answer.</p></div>
+    <div class="box"><div class="step-num">04</div><h3>Prepare for care</h3><p class="mini">Download a visit brief that repeats confirmed results and questions.</p></div>
+  </div>
+  <div class="screenshot-frame"><img src="screenshot-workspace.png" alt="Results, chat, and evidence panel"></div>
+  <p class="source" style="margin-top:2mm">The workspace keeps result cards and conversation together; citations open the evidence panel.</p>
+  <div class="grid-2" style="margin-top:5mm">
+    <div class="box soft"><div class="label">Low result example</div><p style="margin:0">Aarohi's fictional MCV is <strong>78 fL</strong>, below the <strong>80–100 fL</strong> interval printed in that report. The app can say that plainly and cite the exact row. It does not assign a cause from the number alone.</p></div>
+    <div class="box"><div class="label">Guided exploration</div><p style="margin:0">The sample library also covers high WBC, low platelets, an in-range CBC, and a scanned PDF. These cases make both ordinary and awkward paths easy for a reviewer to test.</p></div>
+  </div>
+  <div class="footer"><span>Swasthya Lens · Diya Gupta</span><span>03 / 05</span></div>
+</section>
+
+<section class="page">
+  <div class="eyebrow-row"><span class="kicker">03 · What is different under the hood</span><span class="page-tag">Grounding by design</span></div>
+  <h2>I separated the facts from the explanation.</h2>
+  <p class="lead">The model helps with language and follow-up questions. It does not decide whether a number is high or low. That status comes from deterministic comparison with the interval printed next to the value on the same report.</p>
+  <div class="box" style="margin-top:6mm">
+    <div class="tech-line"><div class="tech-index">1</div><div><h3>Exact report facts</h3><p>The parser supports hemoglobin, WBC, RBC, hematocrit, MCV, and platelets. It preserves values and units, leaves missing intervals unclassified, and omits conflicting duplicate rows.</p></div></div>
+    <div class="tech-line"><div class="tech-index">2</div><div><h3>Relevant medical context</h3><p>A small library of 22 original CBC notes carries stable citation IDs and medical reference links. Retrieval combines BM25 and TF-IDF with optional embeddings for semantic ranking.</p></div></div>
+    <div class="tech-line"><div class="tech-index">3</div><div><h3>Constrained tools</h3><p>The OpenAI Responses API can call <strong>lookup_result</strong> for an exact report value. A consultation tool is explicitly labeled as a local demo request; it never books real care.</p></div></div>
+    <div class="tech-line"><div class="tech-index">4</div><div><h3>Answer checks and fallback</h3><p>The app rejects unknown citation IDs, unsupported numbers, and some definite clinical claims. If the model fails a check or the AI service is unavailable, a local cited response keeps the experience usable.</p></div></div>
+  </div>
+  <div class="evidence">
+    <div class="box soft"><div class="label">Report evidence</div><h3>[R7]</h3><p style="margin:0">MCV · 78 fL · printed interval 80–100 fL. A click returns to the extracted row.</p></div>
+    <div class="box soft"><div class="label">Reference evidence</div><h3>[CBC-11]</h3><p style="margin:0">A source-linked note explains what MCV measures. A click opens its text and medical reference link.</p></div>
+  </div>
+  <div class="quote">“The citation should be useful to a reader, not merely decorative at the end of an answer.”</div>
+  <div class="footer"><span>Swasthya Lens · Diya Gupta</span><span>04 / 05</span></div>
+</section>
+
+<section class="page">
+  <div class="eyebrow-row"><span class="kicker">04 · Evidence, limits, and reflection</span><span class="page-tag">What I can show</span></div>
+  <h2>A working system, with clear boundaries.</h2>
+  <div class="grid-3" style="margin:6mm 0">
+    <div class="box metric"><b>30</b><span>automated tests passed</span></div>
+    <div class="box metric"><b>5</b><span>fictional demo cases</span></div>
+    <div class="box metric"><b>390</b><span>px mobile viewport checked</span></div>
+  </div>
+  <div class="two-col-text">
+    <div>
+      <div class="label">Verified paths</div>
+      <p>Automated checks cover CBC parsing, printed ranges, scanned-PDF OCR, the review gate, citations, unsupported claims, safety routes, brief generation, and API behavior. A Chrome walkthrough checked the full report flow, PDF download, feedback, and mobile overflow.</p>
+      <p>A separate synthetic-data live run recorded OpenAI tool calls, retrieval, latency, and a grounding fallback when an answer failed a check. That fallback is evidence of the checker doing work, not proof that every possible answer is safe.</p>
+    </div>
+    <div>
+      <div class="label">Boundaries I kept explicit</div>
+      <p>OCR runs locally, but AI chat and semantic retrieval send the question, selected report rows, and reference notes to OpenAI when enabled. Sessions and demo consultation requests live only in server memory and disappear on restart.</p>
+      <p>The app supports six CBC markers. It does not diagnose, prescribe, authenticate users, keep longitudinal records, or schedule real care. A production healthcare product would need clinical review, secure storage, access controls, and validation.</p>
+    </div>
+  </div>
+  <div class="closing">
+    <div class="kicker" style="color:#9ce0ba; margin-bottom:2mm">Why it is special to me</div>
+    <p>I connected a package released under my name to a complete product path: from a difficult scan, to reviewed data, to an answer someone can inspect. I am most proud that the system treats uncertainty as something to expose and handle. When OCR or AI is imperfect, the user can see what was read, where an explanation came from, and when the app chose a safer fallback.</p>
+  </div>
+  <div class="rule"></div>
+  <div class="label">Explore the work</div>
+  <p class="source"><a href="https://github.com/diyagupta9104/swasthya-lens">github.com/diyagupta9104/swasthya-lens</a> · App, tests, fictional reports, screenshots, and live verification record</p>
+  <p class="source"><a href="https://pypi.org/project/pdfmark-ocr/">pypi.org/project/pdfmark-ocr/</a> · Package release 0.3.1 credited to Diya Gupta CH23B012</p>
+  <p class="source"><a href="https://medlineplus.gov/lab-tests/complete-blood-count-cbc/">MedlinePlus: Complete Blood Count</a> · One of the public medical references linked from the app's note library</p>
+  <div class="footer"><span>Independent assignment prototype · not medical advice</span><span>05 / 05</span></div>
+</section>
+
+</body>
+</html>

@@ -2,6 +2,8 @@
 
 **A CBC report companion that shows its work.**
 
+**[Download Diya Gupta's creation write-up (PDF)](docs/Swasthya_Lens_Creation_Writeup_Diya_Gupta.pdf)** — the story behind `pdfmark-ocr`, the problem this project addresses, its design choices, and how it was verified.
+
 **Swasthya Lens** turns a CBC report into reviewed result cards, then answers questions with the relevant report row and medical reference notes beside the conversation. It is an independent Edgechat Wizard work sample inspired by the health copilot idea behind [Bayosthiti AI's Ayu](https://bayosthiti.ai/). It is not affiliated with Bayosthiti AI and is not a diagnostic service.
 
 ![The Swasthya Lens report library](docs/screenshot-home.png)
