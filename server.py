@@ -5,7 +5,9 @@ import tempfile
 import threading
 import time
 import uuid
-from unittest.mock import patch
+import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Literal
 
@@ -86,25 +88,24 @@ def _store(text: str, extraction: str, reviewed: bool = False, elapsed: int = 0,
 
 
 def _ocr_pdf(data: bytes) -> str:
-    import os
-    import pymupdf
-    from pdf2md_ocr import stitch_full_pdf
-    with pymupdf.open(stream=data, filetype='pdf') as document:
-        if document.is_encrypted:
-            raise ValueError('Password-protected PDFs are not supported.')
-        if len(document) > 10:
-            raise ValueError('Please upload at most 10 report pages.')
     with tempfile.TemporaryDirectory(prefix='swasthya-') as folder:
         pdf, output = Path(folder) / 'report.pdf', Path(folder) / 'report.md'
         pdf.write_bytes(data)
-        # pdfmark-ocr sizes its ONNX thread pool from the host's CPU count.
-        # Render's free instance sees 8 host CPUs but has only a small CPU share.
-        # Serialize OCR and cap its thread pool to one while the package runs.
-        with OCR_LOCK, patch.object(os, 'cpu_count', return_value=1):
-            markdown, _ = stitch_full_pdf(str(pdf), str(output), engine='rapidocr',
-                                          workers=1, max_dim=1100, render_dpi=130,
-                                          page_ocr='auto')
-        return markdown or output.read_text(encoding='utf-8')
+        # OCR's ONNX models are large. Run them outside the web process so their
+        # memory is released after each report, including after AI chat.
+        environment = os.environ.copy()
+        environment.pop('OPENAI_API_KEY', None)
+        environment.pop('Open_ai_api_key', None)
+        environment.update(OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', MKL_NUM_THREADS='1')
+        with OCR_LOCK:
+            try:
+                result = subprocess.run([sys.executable, str(ROOT / 'ocr_worker.py'), str(pdf), str(output)],
+                                        capture_output=True, text=True, timeout=90, env=environment)
+            except subprocess.TimeoutExpired as exc:
+                raise ValueError('OCR took too long. Try a clearer, shorter report.') from exc
+        if result.returncode != 0:
+            raise ValueError('The PDF could not be read. Try an unlocked, clearer report.')
+        return output.read_text(encoding='utf-8')
 
 
 def _extract(data: bytes, extension: str) -> str:

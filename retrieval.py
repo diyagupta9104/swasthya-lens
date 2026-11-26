@@ -5,16 +5,16 @@ from __future__ import annotations
 import json
 import re
 import hashlib
+import math
 import threading
 import time
+from collections import Counter
 from pathlib import Path
 import numpy as np
 import config
 from provider import embed, ProviderError
 
 from rank_bm25 import BM25Okapi
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 ROOT = Path(__file__).resolve().parent
 DOCUMENTS = json.loads((ROOT / "knowledge_base.json").read_text(encoding="utf-8"))
@@ -26,8 +26,28 @@ def tokens(value: str) -> list[str]:
 
 SEARCH_TEXT = [f"{doc['title']} {doc['topic']} {doc['text']}" for doc in DOCUMENTS]
 BM25 = BM25Okapi([tokens(text) for text in SEARCH_TEXT])
-VECTORIZER = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, stop_words="english")
-DOC_VECTORS = VECTORIZER.fit_transform(SEARCH_TEXT)
+STOPWORDS = {'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'in',
+             'is', 'it', 'of', 'on', 'or', 'that', 'the', 'this', 'to', 'was', 'were', 'with'}
+
+
+def _terms(text: str) -> list[str]:
+    words = [word for word in tokens(text) if word not in STOPWORDS]
+    return words + [f'{left} {right}' for left, right in zip(words, words[1:])]
+
+
+DOC_COUNTS = [Counter(_terms(text)) for text in SEARCH_TEXT]
+DOC_FREQUENCY = Counter(term for counts in DOC_COUNTS for term in counts)
+
+
+def _tfidf(counts: Counter) -> dict[str, float]:
+    weights = {term: (1 + math.log(count)) *
+               (1 + math.log((1 + len(DOCUMENTS)) / (1 + DOC_FREQUENCY[term])))
+               for term, count in counts.items() if term in DOC_FREQUENCY}
+    length = math.sqrt(sum(value * value for value in weights.values())) or 1
+    return {term: value / length for term, value in weights.items()}
+
+
+DOC_VECTORS = [_tfidf(counts) for counts in DOC_COUNTS]
 
 SYNONYMS = {
     "hb": "hemoglobin", "hgb": "hemoglobin", "haemoglobin": "hemoglobin",
@@ -48,7 +68,9 @@ def retrieve_notes(query: str, limit: int = 3) -> list[dict]:
     """Fuse BM25 and TF-IDF ranks; always return stable source IDs."""
     expanded = expand_query(query)
     bm25_scores = BM25.get_scores(tokens(expanded))
-    tfidf_scores = cosine_similarity(VECTORIZER.transform([expanded]), DOC_VECTORS)[0]
+    query_vector = _tfidf(Counter(_terms(expanded)))
+    tfidf_scores = [sum(weight * vector.get(term, 0) for term, weight in query_vector.items())
+                    for vector in DOC_VECTORS]
     bm25_order = sorted(range(len(DOCUMENTS)), key=lambda i: bm25_scores[i], reverse=True)
     tfidf_order = sorted(range(len(DOCUMENTS)), key=lambda i: tfidf_scores[i], reverse=True)
     query_terms = set(tokens(expanded)) - {"what", "does", "mean", "my", "is", "the", "a", "and"}
@@ -90,7 +112,7 @@ def search_notes(query: str, limit: int = 4) -> tuple[list[dict], str]:
     try:
         dense = _dense_index()
         vector = np.asarray(embed([query])[0]).reshape(1, -1)
-        similarities = cosine_similarity(vector, dense)[0]
+        similarities = (dense @ vector.T).ravel() / ((np.linalg.norm(dense, axis=1) * np.linalg.norm(vector)) + 1e-12)
         dense_order = np.argsort(-similarities).tolist()
         lexical_ids = [doc['id'] for doc in lexical]
         scored = []
