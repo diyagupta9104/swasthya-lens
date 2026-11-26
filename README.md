@@ -84,7 +84,7 @@ flowchart LR
 
 ### Local OCR for scanned PDFs
 
-Scanned reports are the awkward part of a report assistant: text extraction alone may return little or nothing. This project uses **[`pdfmark-ocr`](https://pypi.org/project/pdfmark-ocr/)**, whose current 0.3.1 release credits **Diya Gupta CH23B012** on PyPI, with local **RapidOCR** and `page_ocr="auto"`. That produces Markdown text for the CBC parser, including for the included image-based `sample_scanned.pdf`. Images are converted to a PDF first, then follow the same route. OCR is local and needs no cloud OCR key. The interface asks users to verify extracted values because OCR can still misread digits.
+Scanned reports are the awkward part of a report assistant: text extraction alone may return little or nothing. This project uses **`pdfmark-ocr`**, a package published under **Diya Gupta CH23B012**, with local **RapidOCR** and `page_ocr="auto"`. That produces Markdown text for the CBC parser, including for the included image-based `sample_scanned.pdf`. Images are converted to a PDF first, then follow the same route. OCR is local and needs no cloud OCR key. The interface asks users to verify extracted values because OCR can still misread digits.
 
 ### Grounded answers, not guessed values
 

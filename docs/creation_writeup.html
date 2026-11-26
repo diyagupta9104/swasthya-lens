@@ -48,8 +48,11 @@
   .cover-sub { font-size: 18pt; font-weight: 500; line-height: 1.25; color: #c0e8d1; letter-spacing: -.025em; margin-top: 4mm; }
   .byline { display: flex; align-items: center; gap: 3mm; margin: 8mm 0 0; font-size: 10pt; color: #d3ecdd; }
   .byline-mark { width: 8mm; height: 8mm; display: inline-grid; place-items: center; background: #a8e3bf; color: #0d3934; border-radius: 2mm; font-weight: 900; }
-  .cover-statement { margin: 12mm 0 0; padding: 5mm 6mm; border-left: 3px solid #9de2bd; background: rgba(255,255,255,.065); color: #e1f6e8; font-size: 11.5pt; line-height: 1.55; }
-  .cover-shot { margin-top: 9mm; height: 89mm; overflow: hidden; border: 1px solid rgba(255,255,255,.2); border-radius: 4mm; box-shadow: 0 6mm 17mm rgba(0,0,0,.17); }
+  .cover-statement { margin: 8mm 0 0; padding: 4mm 5mm; border-left: 3px solid #9de2bd; background: rgba(255,255,255,.065); color: #e1f6e8; font-size: 10.5pt; line-height: 1.45; }
+  .cover-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-top: 5mm; }
+  .cover-point { min-height: 40mm; border: 1px solid rgba(177,232,201,.24); border-radius: 3mm; padding: 3.5mm; background: rgba(255,255,255,.045); color: #dbf0e2; font-size: 8.7pt; line-height: 1.43; }
+  .cover-point b { display: block; color: #a8e4c1; text-transform: uppercase; font-size: 7.4pt; letter-spacing: .1em; margin-bottom: 2mm; }
+  .cover-shot { margin-top: 6mm; height: 70mm; overflow: hidden; border: 1px solid rgba(255,255,255,.2); border-radius: 4mm; box-shadow: 0 6mm 17mm rgba(0,0,0,.17); }
   .cover-shot img { width: 100%; height: 100%; object-fit: cover; object-position: center 14%; display: block; }
   .cover-caption { color: #a9d2c0; margin-top: 2mm; font-size: 8pt; }
   .flow { display: grid; grid-template-columns: 1fr 8mm 1fr 8mm 1fr 8mm 1fr; align-items: center; margin: 6mm 0; }
@@ -90,12 +93,11 @@
     <h1>Swasthya<br>Lens<span style="color:#a8e4c1">.</span></h1>
     <div class="cover-sub">From lab numbers to questions grounded in evidence.</div>
     <div class="byline"><span class="byline-mark">DG</span> Diya Gupta · CH23B012</div>
-    <div class="cover-statement">What makes this creation special to me is the path from a Python package I published to a complete, careful experience for someone reading a difficult report. The assistant shows the result and source behind an answer, and it gives the user a chance to correct OCR before asking anything.</div>
-    <div class="chip-row">
-      <span class="chip">My PyPI release: pdfmark-ocr 0.3.1</span>
-      <span class="chip">6 CBC markers</span>
-      <span class="chip">22 cited notes</span>
-      <span class="chip">30 tests</span>
+    <div class="cover-statement">What makes this creation special to me is that it begins with <strong>pdfmark-ocr, a Python package published under my name</strong>, and carries its output into an experience someone can actually use. I built Swasthya Lens so a person can move from a hard-to-read CBC report to clear questions for a clinician, while seeing the numbers and sources behind each explanation.</div>
+    <div class="cover-points">
+      <div class="cover-point"><b>The problem</b>A scanned report may contain no selectable text. Even when it can be read, CBC labels, units, and ranges can leave a patient unsure what their own results show.</div>
+      <div class="cover-point"><b>My starting point</b>pdfmark-ocr turns the scanned pages into Markdown using local OCR. That gives my parser readable report rows instead of asking an AI model to guess the numbers.</div>
+      <div class="cover-point"><b>The full journey</b>The user reviews extracted values, explores comparisons with the report's printed ranges, opens answer citations, and prepares a brief for a care visit.</div>
     </div>
   </div>
   <div class="cover-shot"><img src="screenshot-home.png" alt="Swasthya Lens report explorer"></div>
@@ -109,9 +111,8 @@
   <p class="lead">The first problem is often practical: a lab report may be a scan, so ordinary PDF text extraction returns little or nothing. Before an assistant can explain a value, it must be able to read the value.</p>
   <div class="box soft" style="margin:6mm 0 5mm">
     <div class="label">Published package</div>
-    <h3>pdfmark-ocr · release 0.3.1</h3>
-    <p>The current release's PyPI metadata credits <strong>Diya Gupta CH23B012</strong>. It converts PDFs to Markdown using local text extraction and OCR. In Swasthya Lens, I use it as the entry point for scanned reports, with RapidOCR and automatic full-page OCR for text-poor pages.</p>
-    <p class="source"><a href="https://pypi.org/project/pdfmark-ocr/">pypi.org/project/pdfmark-ocr/</a> · Version 0.3.1 verified on 26 November 2026</p>
+    <h3>pdfmark-ocr · published under my name</h3>
+    <p>The package is published under <strong>Diya Gupta CH23B012</strong>. It converts PDFs to Markdown using local text extraction and OCR. In Swasthya Lens, I use it as the entry point for scanned reports, with RapidOCR and automatic full-page OCR for text-poor pages.</p>
   </div>
   <div class="flow">
     <div class="flow-node">Scanned<br>PDF</div><div class="flow-arrow">→</div>
@@ -200,7 +201,6 @@
   <div class="rule"></div>
   <div class="label">Explore the work</div>
   <p class="source"><a href="https://github.com/diyagupta9104/swasthya-lens">github.com/diyagupta9104/swasthya-lens</a> · App, tests, fictional reports, screenshots, and live verification record</p>
-  <p class="source"><a href="https://pypi.org/project/pdfmark-ocr/">pypi.org/project/pdfmark-ocr/</a> · Package release 0.3.1 credited to Diya Gupta CH23B012</p>
   <p class="source"><a href="https://medlineplus.gov/lab-tests/complete-blood-count-cbc/">MedlinePlus: Complete Blood Count</a> · One of the public medical references linked from the app's note library</p>
   <div class="footer"><span>Independent assignment prototype · not medical advice</span><span>05 / 05</span></div>
 </section>
