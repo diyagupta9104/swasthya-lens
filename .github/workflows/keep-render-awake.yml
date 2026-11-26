@@ -1,0 +1,44 @@
+name: Keep Swasthya Lens awake temporarily
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check the four-day window
+        id: window
+        shell: bash
+        env:
+          STOP_AT: '2026-11-30T18:11:26Z'
+        run: |
+          if (( $(date -u +%s) < $(date -u -d "$STOP_AT" +%s) )); then
+            echo 'active=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'active=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Disable this scheduled workflow after four days
+        if: steps.window.outputs.active != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --fail --silent --show-error --request PUT \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/keep-render-awake.yml/disable"
+
+      - name: Request the app health endpoint
+        if: steps.window.outputs.active == 'true'
+        run: |
+          curl --fail --silent --show-error --retry 2 --retry-delay 10 \
+            --retry-all-errors --max-time 120 \
+            'https://ch23b012-edgechat-project.onrender.com/api/health'
