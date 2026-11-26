@@ -46,6 +46,10 @@ python3.12 -m venv .venv
 
 Visit **http://127.0.0.1:8510**. The five sample reports, local OCR, exact range checks, and lexical retrieval work without an OpenAI key. There is no Node build step or external database.
 
+### Deploy on Render
+
+[`render.yaml`](render.yaml) defines a free FastAPI web service in Singapore. [`.python-version`](.python-version) pins Python 3.12 because the OCR dependency does not support Python 3.13 or newer. Connect this GitHub repository to Render and create a Blueprint from `render.yaml`. Render will prompt for `OPENAI_API_KEY` as a secret; enter it in Render, never in the repository. The app can run in local-evidence mode without the key. Render uses `/api/health` to check the service.
+
 ### OpenAI configuration
 
 The app reads `OPENAI_API_KEY` from the server environment, this directory's `.env`, or the parent directory's `.env`. An existing `Open_ai_api_key` variable is also accepted. The key stays on the server; `.env` is ignored by Git. To set up a new environment:
