@@ -1,0 +1,84 @@
+{
+  "checked_at": "2026-11-26T14:27:39.409044+00:00",
+  "synthetic_data_only": true,
+  "cases": [
+    {
+      "question": "What does my MCV mean?",
+      "language": "English",
+      "mode": "Grounding fallback",
+      "content": "MCV: 78 fL — below report range (80–100 fL). [R7]\n\nMean corpuscular volume measures the average size of red blood cells. It can help a clinician interpret other red cell findings but does not establish a diagnosis on its own. [CBC-11]\n\nA clinician can interpret these findings alongside symptoms and history.",
+      "retrieval": "Semantic + BM25 + TF-IDF",
+      "latency_ms": 4087,
+      "tools": [
+        "lookup_result",
+        "grounding_check"
+      ],
+      "source_ids": [
+        "R7",
+        "CBC-11",
+        "CBC-13",
+        "CBC-12",
+        "CBC-01"
+      ],
+      "warning": "The AI answer did not pass the citation and number checks. Verified report evidence is shown instead.",
+      "rejected_model_answer": "Your MCV (Mean Corpuscular Volume) measures the average size of your red blood cells. In your report, the MCV is 78 fL, which is slightly below the report's reference range of 80 to 100 fL [R7]. \n\nA low MCV means your red blood cells are smaller than average. This finding is a clue for your clinician to review, but it doesn't by itself diagnose a specific condition. Other factors like your hemoglobin and additional blood results will also be important for interpretation [CBC-11, CBC-12].\n\nWhen you talk to your clinician, you might ask what could cause smaller red blood cells in your case and whether further tests or treatments are needed based on your overall blood count and health."
+    },
+    {
+      "question": "Is that result high or low?",
+      "language": "English",
+      "mode": "OpenAI + tools",
+      "content": "Your MCV result is 78 fL, which is below the report range of 80 to 100 fL [R7]. This means your average red blood cell size is smaller than usual. A low MCV is a clue for clinical review but does not by itself indicate a specific cause. It's important to discuss this result with your clinician, who will consider it alongside other blood markers and your health history to understand what it might mean for you [CBC-12][CBC-11].",
+      "retrieval": "Semantic + BM25 + TF-IDF",
+      "latency_ms": 3489,
+      "tools": [
+        "lookup_result"
+      ],
+      "source_ids": [
+        "R7",
+        "CBC-13",
+        "CBC-12",
+        "CBC-11",
+        "CBC-06"
+      ],
+      "warning": null
+    },
+    {
+      "question": "Explain my hemoglobin result in Hindi.",
+      "language": "Hindi",
+      "mode": "OpenAI + tools",
+      "content": "आपका हीमोग्लोबिन स्तर 11.2 g/dL है, जो रिपोर्ट के सामान्य सीमा 12 से 15.5 g/dL से नीचे है [R3]। \n\nहीमोग्लोबिन लाल रक्त कोशिकाओं में ऑक्सीजन ले जाने वाला प्रोटीन होता है। इसका स्तर कम होना संकेत हो सकता है कि आपके रक्त में ऑक्सीजन ले जाने की क्षमता सामान्य से कम है। हालांकि, यह परिणाम अकेले कारण नहीं बताता। इसे आपके अन्य रक्त परीक्षणों, लक्षणों और स्वास्थ्य इतिहास के साथ मिलाकर डॉक्टर ही सही व्याख्या कर सकते हैं [CBC-04][CBC-05]।\n\nआप अपने डॉक्टर से इस परिणाम के बारे में चर्चा करें ताकि वे पूरी तस्वीर समझकर उचित सलाह दे सकें।",
+      "retrieval": "Semantic + BM25 + TF-IDF",
+      "latency_ms": 4524,
+      "tools": [
+        "lookup_result"
+      ],
+      "source_ids": [
+        "R3",
+        "CBC-04",
+        "CBC-06",
+        "CBC-05",
+        "CBC-10"
+      ],
+      "warning": null
+    },
+    {
+      "question": "Please book a demo consultation.",
+      "language": "English",
+      "mode": "OpenAI + tools",
+      "content": "Demo consultation request DEMO-10E8D979 recorded locally. No clinician has been contacted or booked. Use the Visit brief download to prepare for a real consultation.",
+      "retrieval": "Semantic + BM25 + TF-IDF",
+      "latency_ms": 3748,
+      "tools": [
+        "request_consultation"
+      ],
+      "source_ids": [
+        "R3",
+        "CBC-04",
+        "CBC-06",
+        "CBC-05",
+        "CBC-02"
+      ],
+      "warning": null
+    }
+  ]
+}

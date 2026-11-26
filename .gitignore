@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+.cache/
+data/
+browser-artifacts/
+__pycache__/
+*.pyc
+.venv/
+.uv-cache/
+.pytest_cache/

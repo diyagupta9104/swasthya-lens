@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d3c3a">
+  <meta name="description" content="Understand your CBC report with reviewed values, plain-language explanations and visible evidence.">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <title>Swasthya Lens — Your report, understood</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div><div><strong>Swasthya<span>Lens</span></strong><small>Your report, understood.</small></div></div>
+    <div class="sidebar-section"><div class="sidebar-label">YOUR SPACE</div><button class="nav-item active" id="nav-workspace"><span class="nav-icon">▦</span> Report explorer <span class="nav-arrow">↗</span></button><button class="nav-item" id="nav-new"><span class="nav-icon">＋</span> Start a new report</button></div>
+    <div class="sidebar-section flow-section">
+      <div class="sidebar-label">A LITTLE CLARITY, STEP BY STEP</div>
+      <div class="flow-step"><span>01</span><div><strong>Bring your report</strong><small>PDF, photo, or text</small></div></div>
+      <div class="flow-step"><span>02</span><div><strong>Check your numbers</strong><small>Review the extracted values</small></div></div>
+      <div class="flow-step"><span>03</span><div><strong>Make sense of it</strong><small>Ask, explore, prepare for care</small></div></div>
+    </div>
+    <div class="sidebar-bottom"><div class="privacy-card"><div class="privacy-icon">✧</div><strong>You stay in control.</strong><p>OCR runs on this computer. Questions, selected report values and reference notes are sent to OpenAI when you chat. Clear your report when you're done.</p></div><div class="sidebar-foot">EDUCATIONAL COMPANION <span>•</span> CBC</div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div class="breadcrumb">Your workspace <span>/</span> Report explorer</div><div class="top-actions"><span class="status-dot"></span><span id="model-status">Connecting…</span><div class="avatar">SL</div></div></header>
+    <div class="content">
+      <section class="hero" id="welcome-hero">
+        <div class="hero-copy"><div class="eyebrow"><span class="eyebrow-line"></span> A MORE HUMAN WAY TO READ YOUR CBC</div><h1>From lab numbers<br>to <em>real understanding.</em></h1><p>Pick a fictional patient report, see what the printed ranges say, and ask questions with the evidence beside each answer.</p><div class="hero-actions"><button class="button button-light" id="hero-upload">Explore demo reports <span>↗</span></button><span class="hero-note">Five guided cases · One clear conversation</span></div></div>
+        <div class="hero-art" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="art-glow"></div><div class="art-card"><div class="art-card-top"><span>COMPLETE BLOOD COUNT</span><span class="art-dots">•••</span></div><div class="art-wave"><svg viewBox="0 0 280 80" preserveAspectRatio="none"><path d="M0 50 C35 47 39 60 72 47 S112 17 140 43 S181 67 211 42 S255 33 280 18" fill="none" stroke="#6de0bd" stroke-width="3" stroke-linecap="round"/></svg></div><div class="art-row"><span>Hemoglobin</span><b>11.2 <small>g/dL</small></b></div><div class="art-rule"></div><div class="art-row"><span>Reference interval</span><span>12.0 – 15.5</span></div><div class="art-pill"><span class="art-pill-dot"></span> A number, with context</div></div><div class="art-spark">✦</div></div>
+      </section>
+      <div class="journey-strip" aria-label="How the demo works"><div><span>01</span><strong>Choose a report</strong><small>Five fictional patient cases</small></div><div><span>02</span><strong>Review the values</strong><small>Exact numbers and lab intervals</small></div><div><span>03</span><strong>Ask with evidence</strong><small>Sources alongside every answer</small></div></div>
+      <section id="upload-section">
+        <div class="section-heading"><div><div class="eyebrow dark">THE REPORT LIBRARY</div><h2>Choose a patient story</h2><p>All five reports are synthetic. Select one to explore a different CBC pattern.</p></div><div class="section-count">01 <span>/ 03</span></div></div>
+        <div id="sample-grid" class="sample-grid" aria-label="Synthetic patient reports"><div class="sample-loading">Loading the demo report library…</div></div>
+        <div class="own-report-head"><div><div class="eyebrow dark">YOUR OWN FILE</div><h3>Have a report in hand?</h3><p>Upload a PDF, image or text file. Check the extracted values before you chat.</p></div><span class="own-report-chip">LOCAL OCR · PDFMARK-OCR</span></div>
+        <div class="upload-grid">
+          <div class="upload-card" id="dropzone" tabindex="0" role="button" aria-label="Upload a report">
+            <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" hidden>
+            <div class="upload-icon">↥</div><h3>Drop your report here</h3><p>Or <button class="text-button" id="browse-button">browse files</button> to choose one</p><div class="upload-formats"><span>PDF</span><span>PHOTO</span><span>TXT</span><span>8 MB · 10 PAGES</span></div>
+          </div>
+          <div class="upload-aside"><span class="upload-aside-icon">✳</span><strong>Made for clarity, not conclusions.</strong><p>Results are compared only with the ranges printed on that report. The assistant explains supported CBC markers and links its medical reference notes.</p><div class="upload-aside-rule"></div><small>PERSONAL DATA TIP</small><p>Remove names and identifiers before uploading your own report.</p></div>
+        </div>
+        <details class="paste-panel"><summary>Have your report as text? Paste it here <span>⌄</span></summary><div class="paste-inner"><label for="report-text" class="sr-only">Report text</label><textarea id="report-text" rows="6" placeholder="Hemoglobin | 11.2 | g/dL | 12.0 - 15.5&#10;WBC | 7.6 | x10^3/uL | 4.0 - 11.0"></textarea><button class="button button-primary" id="paste-button">Read pasted report →</button></div></details>
+      </section>
+      <div id="notice" class="notice" role="status" hidden></div>
+      <section id="results-section" class="results-section" hidden>
+        <div class="section-heading"><div><div class="eyebrow dark">YOUR REPORT <span id="active-report" class="active-report"></span></div><h2>A closer look at your numbers</h2><p id="extraction-label"></p></div><div class="section-count">02 <span>/ 03</span></div></div>
+        <div class="report-toolbar"><span id="review-status" class="review-badge">Review needed</span><div><button id="edit-extraction" class="button button-outline">Review extracted text</button><a id="download-brief" class="button button-outline disabled" aria-disabled="true">↓ Visit brief</a></div></div>
+        <div id="result-summary" class="result-summary"></div>
+        <div id="result-grid" class="result-grid"></div>
+        <div id="review-panel" class="review-panel" hidden><div><h3>Check the source before the conversation.</h3><p>OCR can misread digits or merge columns. Compare the values with your original. Correct the text below if necessary, then confirm it. Supported markers: Hb, WBC, RBC, hematocrit, MCV and platelets.</p></div><label for="review-text">Extracted report text</label><textarea id="review-text" rows="9" spellcheck="false"></textarea><button id="confirm-review" class="button button-primary">Confirm these values →</button></div>
+        <div id="report-actions" class="report-actions" hidden><span>Ready for a little more context?</span><button id="explain-report" class="button button-primary">Explain my report <span>✳</span></button></div>
+      </section>
+      <section id="chat-section" class="chat-section" hidden>
+        <div class="section-heading"><div><div class="eyebrow dark">YOUR CONVERSATION</div><h2>Questions are welcome</h2><p>Follow up naturally. Every answer comes with its evidence.</p></div><label class="language-label">Answer in <select id="language"><option>English</option><option value="Hindi">हिन्दी</option></select></label></div>
+        <div class="chat-layout">
+          <div class="chat-panel"><div class="chat-top"><div class="chat-avatar">✳</div><div><strong>Swasthya assistant</strong><small>Here to help you understand</small></div><span class="online-pill" id="chat-status">● READY</span></div>
+            <div id="messages" class="messages" role="log" aria-live="polite" aria-label="Conversation"></div>
+            <div class="suggestions" id="suggestions"><button data-question="Which results are outside my report's range?">What stands out?</button><button data-question="What does my MCV mean?">Explain MCV</button><button data-question="What should I ask my clinician?">Prepare for a visit</button></div>
+            <form id="chat-form" class="chat-compose"><label for="question-input" class="sr-only">Ask about your report</label><input id="question-input" autocomplete="off" placeholder="Ask about your report, or follow up…" maxlength="1000"><button type="submit" id="send-button" aria-label="Send question">↗</button></form><div class="chat-disclaimer">Educational guidance. For urgent symptoms, seek medical care.</div>
+          </div>
+          <aside class="evidence-panel"><div class="evidence-head"><div class="evidence-icon">⌁</div><div><strong>Behind this answer</strong><small>Your report + medical reference notes</small></div></div><div id="evidence-list" class="evidence-list"><div class="evidence-empty">Ask a question to see the evidence used in the answer.</div></div><div class="evidence-foot"><span id="answer-mode">READY</span><span id="answer-latency">—</span></div></aside>
+        </div>
+        <details class="insights"><summary>Session insights <span>Response speed, tool activity and feedback</span></summary><div id="metrics-grid" class="metrics-grid"></div><div id="tool-activity" class="tool-activity">Tool activity will appear after a question.</div></details>
+      </section>
+      <footer class="footer"><span>Swasthya Lens <span class="footer-divider">/</span> Built for understanding.</span><span>Educational prototype · Not a diagnostic service</span></footer>
+    </div>
+  </main>
+</div>
+<script src="/static/app.js" defer></script>
+</body>
+</html>
