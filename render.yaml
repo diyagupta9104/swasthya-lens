@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: swasthya-lens
+    name: ch23b012-edgechat-project
     runtime: python
     region: singapore
     plan: free

@@ -50,7 +50,7 @@ Visit **http://127.0.0.1:8510**. The five sample reports, local OCR, exact range
 
 ### Deploy on Render
 
-[`render.yaml`](render.yaml) defines a free FastAPI web service in Singapore. [`.python-version`](.python-version) pins Python 3.12 because the OCR dependency does not support Python 3.13 or newer. Connect this GitHub repository to Render and create a Blueprint from `render.yaml`. Render will prompt for `OPENAI_API_KEY` as a secret; enter it in Render, never in the repository. The app can run in local-evidence mode without the key. Render uses `/api/health` to check the service.
+The app is hosted at **[ch23b012-edgechat-project.onrender.com](https://ch23b012-edgechat-project.onrender.com)** on a free Render web service in Singapore. [`render.yaml`](render.yaml) records the same configuration, and [`.python-version`](.python-version) pins Python 3.12 because the OCR dependency does not support Python 3.13 or newer. Add `OPENAI_API_KEY` as a Render secret to enable AI chat and semantic retrieval; the app also runs in local-evidence mode without it. Render uses `/api/health` to check the service.
 
 ### OpenAI configuration
 
